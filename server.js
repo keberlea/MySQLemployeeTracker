@@ -1,9 +1,3 @@
-// require dotenv
-require('dotenv').config();
-
-// require express
-const express = require('express');
-
 //require inquirer
 const inquirer = require('inquirer');
 
@@ -11,56 +5,17 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 
 //require console.table
-//const cTable = require('console.table');
+const cTable = require('console.table');
 
-//require mysql12
-const mysql = require('mysql2');
-
-
-
-//port
-const PORT = process.env.PORT || 3306;
-
-//call express function varibale
-const app = express();
-
-//express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-
-
-
-//connect to database
-const db = mysql.createConnection(
-    {
-        host: 'localhost',
-        // MySQL username,
-        user: 'root',
-        // MySQL password
-        password: process.env.PASSWORD,
-        // company database
-        database: 'employee_db',
-        // port
-        port: 3306,
-    },
-    console.log(`Connected to the company database.`)
-);
-
-
-//start server after DB connection
-db.connect(err => {
-    if (err) throw err;
-    console.log('Database connected.');
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
-});
+//require connection.js
+const db = require('./db/connection.js');
 
 //inquirer prompt
-const question = inquirer.prompt
-    ({
+const menuQuestions =
+    inquirer
+        .prompt({
         type: 'list',
-        name: 'action',
+        name: 'menu',
         message: 'What would you like to do?',
         choices: [
             'View all employees',
@@ -81,7 +36,8 @@ const question = inquirer.prompt
         ]
     })
     .then((answer) => {
-        switch (answer.action) {
+        //switch case depending on user selection
+        switch (answer.menuQuestions) {
             case 'View all employees':
                 viewEmployees();
                 break;
@@ -145,16 +101,23 @@ const question = inquirer.prompt
     }
     );
 
-//view all employees
+
+//view all employees by their first name, last name, department, role and manager id
+
 function viewEmployees() {
-    db.query(`SELECT * FROM employee`, (err, results) => {
+    //set sql variable for query response
+    const sql = 'SELECT * FROM employee'
+    db.query(sql, (err, response) => {
         if (err) {
             console.log(err);
         }
-        console.table(results);
-        start();
-    });
-}
+        console.log("Viewing all employees...")
+        console.table(response);
+        }
+    
+    );
+        menuQuestions()
+    };
 
 //view all employees by department
 function viewEmployeesByDepartment() {
@@ -300,14 +263,10 @@ function viewBudget() {
     });
 }
 
-//exit
-function exit() {
-    process.exit();
-}
 
 //start
 function start() {
-    question;
+    menuQuestions;
 }
 
 
