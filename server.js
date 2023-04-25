@@ -138,21 +138,12 @@ function viewRoles() {
     });
 }
 
-//view all employees
+//view all employees including employee ids, first names, last names, job titles, departments, salaries and manager id
 function viewEmployees() {
+    let sql = `SELECT * FROM employee VALUE(? ? ? ? ? ? ?)`;
+    let params = [employee_id, first_name, last_name, role_id, manager_id]; 
 
-    //query employee data including employee ids, first names, last names, job titles, departments, salaries and manager id
-    let sql = `SELECT * from employee, 
-    employee.first_name, 
-    employee.last_name, 
-    roles.title, 
-    department.department_name AS 'department', 
-    roles.salary
-    FROM employee, roles, department 
-    WHERE department.id = roles.department_id 
-    AND roles.id = employee.roles_id
-    ORDER BY employee.id ASC`;
-    db.query(sql, (err, response) => {
+    db.query(sql, params, (err, response) => {
         if (err) {
             console.log(err);
         }
@@ -215,8 +206,7 @@ async function addEmployee() {
         },
     ]).then((response) => {
         console.log(`Adding employee ${response.firstName} ${response.lastName}...`);
-        let sql = `INSERT INTO employee (first_name, last_name, rolequit
-            _id, manager_id) VALUES (?, ?, ?, ?)`;
+        let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
     //set variable for response first name, last name, role id, manager id
         let params = [response.firstName, response.lastName, response.roleId, response.managerId];
         db.query(sql, params, (err, results) => {
@@ -224,7 +214,7 @@ async function addEmployee() {
                 console.log(err);
             }
             console.table(results);
-            menuQuestions;
+            start();
         });
     });
 }
@@ -247,7 +237,7 @@ async function removeEmployee() {
                 console.log(err);
             }
             console.table(results);
-            menuQuestions;
+            start();
     }); 
     });
 }
@@ -288,6 +278,7 @@ function updateEmployeeManager() {
         }
     )})
     }
+
     //function to prompt new manager ID
 
     function managerID() {
