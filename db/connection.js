@@ -16,5 +16,9 @@ const db = mysql.createConnection(
     }
 );
 
+db.connect((error) => {
+    if (error) throw error;
+  });
+  
 //export connection for use in other files
 module.exports = db;
