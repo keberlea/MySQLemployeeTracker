@@ -6,11 +6,11 @@ VALUES  ("Production"),
 
 
 INSERT INTO roles (title, salary, department_id)
-VALUES("Production Worker", 80000, 2),
+VALUES("Production Manager", 80000, 3),
       ("Accountant", 120000, 2),
-      ("President", 220000, 4),
-      ("Production Worker",25000, 1),
-      ("Intern", 30000,4);
+      ("President", 220000, 1),
+      ("Production Worker",25000, 3),
+      ("Sanitation", 30000, 4);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES  (001, "Joe", "Moma", 1, 1),
