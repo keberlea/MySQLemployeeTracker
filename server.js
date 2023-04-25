@@ -138,21 +138,12 @@ function viewRoles() {
     });
 }
 
-//view all employees
+//view all employees including employee ids, first names, last names, job titles, departments, salaries and manager id
 function viewEmployees() {
+    let sql = `SELECT * FROM employee VALUE(? ? ? ? ? ? ?)`;
+    let params = [employee_id, first_name, last_name, role_id, manager_id]; 
 
-    //query employee data including employee ids, first names, last names, job titles, departments, salaries and manager id
-    let sql = `SELECT * from employee, 
-    employee.first_name, 
-    employee.last_name, 
-    roles.title, 
-    department.department_name AS 'department', 
-    roles.salary
-    FROM employee, roles, department 
-    WHERE department.id = roles.department_id 
-    AND roles.id = employee.roles_id
-    ORDER BY employee.id ASC`;
-    db.query(sql, (err, response) => {
+    db.query(sql, params, (err, response) => {
         if (err) {
             console.log(err);
         }
@@ -188,49 +179,66 @@ await inquirer
 }
 
 
-//view all employees by department
-function viewEmployeesByDepartment() {
-    db.query(`SELECT * FROM department`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-
-        start();
-    });
-}
-
-//view all employees by manager
-function viewEmployeesByManager() {
-    db.query(`SELECT * FROM employee`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
-
 //add employee
-function addEmployee() {
-    db.query(`SELECT * FROM employee`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
+async function addEmployee() {
+    //prompt for employee first name, last name, role id, manager id
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'firstName',
+            message: 'Enter the first name of the employee you would like to add',
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'Enter the last name of the employee you would like to add',
+        },
+        {
+            type: 'input',
+            name: 'roleId',
+            message: 'Enter the role id of the employee you would like to add',
+        },
+        {
+            type: 'input',
+            name: 'managerId',
+            message: 'Enter the manager id of the employee you would like to add',
+        },
+    ]).then((response) => {
+        console.log(`Adding employee ${response.firstName} ${response.lastName}...`);
+        let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+    //set variable for response first name, last name, role id, manager id
+        let params = [response.firstName, response.lastName, response.roleId, response.managerId];
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            }
+            console.table(results);
+            start();
+        });
     });
 }
 
 //remove employee
-function removeEmployee() {
-    let deleteEmployee = 
-    db.query(`DELETE FROM employee where id = ?`, deleteEmployee, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
+async function removeEmployee() {
+    //prompt for employee id
+    await inquirer
+    .prompt({
+        type: 'input',
+        name: 'employeeId',
+        message: 'Enter the employee id of the employee you would like to remove',
+    }).then((response) => {
+        console.log(`Removing employee ${response.employeeId}...`);
+        let sql = `DELETE FROM employee WHERE id = ?`;
+    //set variable for response employee id
+        let deleteEmployee = response.employeeId
+        db.query(`DELETE FROM employee where id = ?`, deleteEmployee, (err, results) => {
+            if (err) {
+                console.log(err);
+            }
+            console.table(results);
+            start();
+    }); 
     });
 }
 
@@ -270,6 +278,7 @@ function updateEmployeeManager() {
         }
     )})
     }
+
     //function to prompt new manager ID
 
     function managerID() {
