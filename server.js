@@ -215,7 +215,8 @@ async function addEmployee() {
         },
     ]).then((response) => {
         console.log(`Adding employee ${response.firstName} ${response.lastName}...`);
-        let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+        let sql = `INSERT INTO employee (first_name, last_name, rolequit
+            _id, manager_id) VALUES (?, ?, ?, ?)`;
     //set variable for response first name, last name, role id, manager id
         let params = [response.firstName, response.lastName, response.roleId, response.managerId];
         db.query(sql, params, (err, results) => {
