@@ -1,9 +1,7 @@
 //require inquirer
 const inquirer = require('inquirer');
-
 //require fs
 const fs = require('fs');
-
 //require console.table
 const cTable = require('console.table');
 //require connection.js
@@ -14,7 +12,10 @@ require('dotenv').config();
 const mysql = require('mysql2');
   
 
+start();
+
 //inquirer prompt
+function start(){
 const menuQuestions =
     inquirer
         .prompt({
@@ -29,12 +30,10 @@ const menuQuestions =
             'Add role',
             'Add employee',
             'Update employee role',
-            //  add an employee, and update an employee role
-            
-            'View all employees by department',
-            'View all employees by manager',
-            'Remove employee',
             'Update employee manager',
+            'View all employees by manager',
+            'View all employees by department',
+            'Remove employee',
             'Remove role',
             'Remove department',
             'View the total utilized budget of a department',
@@ -110,10 +109,6 @@ const menuQuestions =
         }
     }
     );
-
-//start function
-function start() {
-    menuQuestions;
 }
 
 //view all departments
@@ -122,8 +117,9 @@ function viewDepartments() {
         if (err) {
             console.log(err);
         }
-        console.table(results);
-        start();
+            console.table(results);
+            //prompt questions again
+            start();
     });
 }
 
@@ -138,12 +134,17 @@ function viewRoles() {
     });
 }
 
-//view all employees including employee ids, first names, last names, job titles, departments, salaries and manager id
+//view all employees from employee table including employee ids, first names, last names, job titles, departments, salaries and manager id
 function viewEmployees() {
-    let sql = `SELECT * FROM employee VALUE(? ? ? ? ? ? ?)`;
-    let params = [employee_id, first_name, last_name, role_id, manager_id]; 
+    let sql = `SELECT e.id, e.first_name, e.last_name, 
+    r.title AS job_title, d.department_name AS department, 
+    r.salary, e.manager_id 
+    FROM employee e 
+    JOIN roles r ON e.id = r.id 
+    JOIN department d ON r.department_id = d.id`;
 
-    db.query(sql, params, (err, response) => {
+
+    db.query(sql, (err, response) => {
         if (err) {
             console.log(err);
         }
@@ -171,11 +172,63 @@ await inquirer
     db.query(sql, params, (err,results) => {
         if (err) {
             console.log(err);
-        }
-        console.table(results);
-    });
-  });
+        }else {
+            console.log(`Added department ${response.name} successfully!`);
+            // Select the added department and display the results
+            db.query(`SELECT * FROM department WHERE department_name = ?`, params, (err, results) => {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.table(results);
+                    // Prompt questions again
+                    start();
+                }
+            });
+   }});
+});
    
+}
+
+//add role 
+async function addRole() {
+    //prompted to enter the name, salary, and department for the role and that role is added to the database
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'title',
+            message: 'Enter the name of the role you would like to add',
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'Enter the salary of the role you would like to add',
+        },
+        {
+            type: 'input',
+            name: 'departmentId',
+            message: 'Enter the department id of the role you would like to add',
+        },
+    ]).then((response) => {
+        console.log(`Adding role ${response.title}...`);
+        let sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)`;
+        let params = [response.title, response.salary, response.departmentId];
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.log(`Added role ${response.title} successfully!`);
+                db.query(`SELECT * FROM roles WHERE title = ?`, response.title, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.table(results);
+                        start();
+                    }
+                });
+            }
+        });
+    });
 }
 
 
@@ -206,10 +259,196 @@ async function addEmployee() {
         },
     ]).then((response) => {
         console.log(`Adding employee ${response.firstName} ${response.lastName}...`);
-        let sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
-    //set variable for response first name, last name, role id, manager id
+        let sql = `INSERT INTO employee (first_name, last_name, roles_id, manager_id) VALUES (?, ?, ?, ?)`;
         let params = [response.firstName, response.lastName, response.roleId, response.managerId];
         db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.log(`Added employee ${response.firstName} ${response.lastName} successfully!`);
+                db.query(`SELECT * FROM employee WHERE first_name = ? AND last_name = ?`, [response.firstName, response.lastName], (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.table(results);
+                        start();
+                    }
+                });
+
+            }
+           
+        });
+    });
+}
+
+
+
+
+//update employee role
+async function updateEmployeeRole() {
+    //prompt
+    await inquirer
+    .prompt([
+    {
+        type: 'input',
+        name: 'updateRole',
+        message: 'Enter the employee id of the employee you would like to update the role for',
+    },
+    {
+        type: 'input',
+        name: 'newRole',
+        message: 'Enter the new role id for the employee',
+    }
+    ]).then((response) => {
+        console.log(`Updating employee ${response.updateRole}...`);
+        let sql = `UPDATE employee SET roles_id = ? WHERE id = ?`;
+        let params = [response.newRole, response.updateRole];
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            }else{
+                console.log(`Updated employee ${response.updateRole} successfully!`);
+                db.query(`SELECT * FROM employee WHERE id = ?`, response.updateRole, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.table(results);
+                        start();
+                    }
+                });
+            }
+        });
+    });
+}
+    
+
+
+//update employee manager, select employee by employee_id prompt prompt to update employee manager
+function updateEmployeeManager() {
+    const updateManager = inquirer
+    .prompt([
+        {
+        type: 'input',
+        name: 'updateManager',
+        message: 'Enter the employee id of the employee you would like to update the manager for',
+        },
+        {
+        type: 'input',
+        name: 'newManager',
+        message: 'Enter the new manager id for the employee',
+        }
+    ]).then((response) => {
+        console.log(`Updating employee ${response.updateManager}...`);
+        let sql = `UPDATE employee SET manager_id = ? WHERE id = ?`;
+        let params = [response.newManager, response.updateManager];
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.log(`Updated employee ${response.updateManager} successfully!`);
+                db.query(`SELECT * FROM employee WHERE id = ?`, response.updateManager, (err, results) => {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        console.table(results);
+                        start();
+                    }
+                });
+            }
+        });
+    });
+}
+
+
+//view employees by managerid
+async function viewEmployeesByManager() {
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'managerId',
+            message: 'Enter the manager id of the employees you would like to view',
+        }
+    ]).then((response) => {
+        console.log(`Viewing employees with manager id ${response.managerId}...`);
+        let sql = `SELECT * FROM employee WHERE manager_id = ?`;
+        let params = response.managerId;
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.table(results);
+                start();
+            }
+            
+        });
+    });
+}
+
+//view employees by department
+async function viewEmployeesByDepartment() {
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'departmentId',
+            message: 'Enter the department id of the employees you would like to view',
+        }
+    ]).then((response) => {
+        console.log(`Viewing employees with department id ${response.departmentId}...`);
+        let sql = `SELECT * FROM employee WHERE department_id = ?`;
+        let params = response.departmentId;
+        db.query(sql, params, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.table(results);
+                start();
+            }
+        });
+    });
+}
+
+
+ //remove department
+async function removeDepartment() {
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'departmentId',
+            message: 'Enter the department id of the department you would like to remove',
+        }
+    ]).then((response) => {
+        console.log(`Removing department ${response.departmentId}...`);
+        let sql = `DELETE FROM department WHERE id = ?`;
+        let deleteDepartment = response.departmentId
+        db.query(`DELETE FROM department where id = ?`, deleteDepartment, (err, results) => {
+            if (err) {
+                console.log(err);
+            } else{
+                console.table(results);
+                start();
+            }
+        });
+    });
+}   
+
+
+//remove role
+async function removeRole() {
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'roleId',
+            message: 'Enter the role id of the role you would like to remove',
+        }
+    ]).then((response) => {
+        console.log(`Removing role ${response.roleId}...`);
+        let sql = `DELETE FROM roles WHERE id = ?`;
+        let deleteRole = response.roleId
+        db.query(`DELETE FROM roles where id = ?`, deleteRole, (err, results) => {
             if (err) {
                 console.log(err);
             }
@@ -223,11 +462,13 @@ async function addEmployee() {
 async function removeEmployee() {
     //prompt for employee id
     await inquirer
-    .prompt({
+    .prompt([
+    {
         type: 'input',
         name: 'employeeId',
         message: 'Enter the employee id of the employee you would like to remove',
-    }).then((response) => {
+    }
+    ]).then((response) => {
         console.log(`Removing employee ${response.employeeId}...`);
         let sql = `DELETE FROM employee WHERE id = ?`;
     //set variable for response employee id
@@ -242,128 +483,30 @@ async function removeEmployee() {
     });
 }
 
-//update employee role
-function updateEmployeeRole() {
-    db.query(`SELECT * FROM employee`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
 
-//update employee manager, select employee by employee_id prompt prompt to update employee manager
-function updateEmployeeManager() {
-    const updateManager = inquirer
-    .prompt({
-        type: 'input',
-        name: 'updateManager',
-        message: 'Enter the employee id of the employee you would like to update the manager for',
-        validate: employeeId => {
-            if (employeeId) {
-                return true;
-            } else {
-                console.log('Please enter the employee id of the employee you would like to update the manager for');
-                return false;
-            }
+//view budget of a department
+async function viewBudget() {
+    await inquirer
+    .prompt([
+        {
+            type: 'input',
+            name: 'departmentId',
+            message: 'Enter the department id of the department you would like to view the budget for',
         }
-    }).then((response) => {
-        db.query(`SELECT * FROM employee WHERE employee_id = ${response.employeeId}`, (err, results) => {
+    ]).then((response) => {
+        console.log(`Viewing budget for department ${response.departmentId}...`);
+        let sql = `SELECT SUM(salary) FROM roles WHERE department_id = ?`;
+        let params = [response.departmentId];
+        db.query(sql, params, (err, results) => {
             if (err) {
                 console.log(err);
             }
             console.table(results);
-            managerID();
-        }
-    )})
-    }
-
-    //function to prompt new manager ID
-
-    function managerID() {
-        const managerId = inquirer
-        .prompt({
-            type: 'input',
-            name: 'managerId',
-            message: 'Enter the id of the new manager',
-            validate: managerId => {
-                if (managerId) {
-                    return true;
-                } else {
-                    console.log('Please enter the id of the new manager');
-                    return false;
-                }
-            }
-        }).then((response) => {
-            //update response.employeeID with new managerId
-            db.query(`UPDATE employee SET manager_id = ${response.managerId} WHERE employee_id = ${response.employeeId}`, (err, results) => {
-                if (err) {
-                    console.log(err);
-                }
-                console.table(results);
-                start();
-            }
-        )})
-        }
-
+            start();
+        });
+    });
+}
     
-
-    
-    
-   
-
-
-
-
-
-//add role
-function addRole() {
-    db.query(`SELECT * FROM role`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
-
-//remove role
-function removeRole() {
-    db.query(`SELECT * FROM role`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
-
-
-
-
-
-//remove department
-function removeDepartment() {
-    db.query(`SELECT * FROM department`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
-
-//view budget
-function viewBudget() {
-    db.query(`SELECT * FROM department`, (err, results) => {
-        if (err) {
-            console.log(err);
-        }
-        console.table(results);
-        start();
-    });
-}
 
 
 
