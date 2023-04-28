@@ -401,7 +401,10 @@ async function viewEmployeesByDepartment() {
         db.query(sql, params, (err, results) => {
             if (err) {
                 console.log(err);
-            } 
+            } else{
+                console.table(results);
+                start();
+            }
         });
     });
 }
@@ -423,9 +426,10 @@ async function removeDepartment() {
         db.query(`DELETE FROM department where id = ?`, deleteDepartment, (err, results) => {
             if (err) {
                 console.log(err);
+            } else{
+                console.table(results);
+                start();
             }
-            console.table(results);
-            start();
         });
     });
 }   

@@ -21,6 +21,20 @@
 
   ## Usage
   Start with creating a .env file to update MySQL connection username and password, npm install and npm start to intialize application.
+  Link to screen recording of funcional application: https://drive.google.com/file/d/1djlYROH2pCBwfFgAmXxnMVHKKtyBymqt/view
+  <iframe src="https://drive.google.com/file/d/1djlYROH2pCBwfFgAmXxnMVHKKtyBymqt/preview" width="640" height="480"></iframe>
+
+  First five rompts:
+![Alt text](Assets/first5prompts.png)
+  
+  Next set of five Prompts:
+![Alt text](Assets/second5prompts.png)
+
+  Remove Employee and Roles:
+![Alt text](Assets/rmvEmpRole.png)
+
+  Remove Department and Total Budget of Department:
+![Alt text](Assets/rmvDepBudget.png)
 
   ## License 
   

@@ -20,5 +20,6 @@ CREATE TABLE employee(
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
     roles_id INTEGER,
+    department_id INTEGER,
     manager_id INTEGER
 );
